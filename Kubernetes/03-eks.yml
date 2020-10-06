@@ -1,5 +1,5 @@
 Parameters:
-    EKSClusterName:
+    ClusterName:
         Description: Cluster name
         Type: String
         Default: udacity-devops-eks
@@ -14,7 +14,7 @@ Resources:
     EKSCluster:
         Type: AWS::EKS::Cluster
         Properties:
-          Name: !Ref EKSClusterName
+          Name: !Ref ClusterName
           RoleArn: 
             Fn::ImportValue: !Sub "${EnvironmentName}-EKSIAMRoleArn"
           ResourcesVpcConfig:

@@ -292,6 +292,18 @@ Outputs:
       Value: !Ref PrivateSubnet02
       Export:
         Name: !Sub ${EnvironmentName}-PRI2-SN  
+  
+  PublicSubnets:
+    Description: A list of the public subnets
+    Value: !Join [ ",", [ !Ref PublicSubnet01, !Ref PublicSubnet02 ]]
+    Export:
+      Name: !Sub ${EnvironmentName}-PUB-NETS
+
+  PrivateSubnets:
+    Description: A list of the private subnets
+    Value: !Join [ ",", [ !Ref PrivateSubnet01, !Ref PrivateSubnet02 ]]
+    Export:
+      Name: !Sub ${EnvironmentName}-PRIV-NETS
 
   SubnetIds:
     Description: Subnets IDs in the VPC

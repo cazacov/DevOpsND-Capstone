@@ -1,0 +1,26 @@
+[
+    {
+        "ParameterKey": "EnvironmentName",
+        "ParameterValue": "Udacity-DevOps-Capstone"
+    },
+    {
+        "ParameterKey": "ClusterName",
+        "ParameterValue": "udacity-devops-eks"
+    },
+    {
+        "ParameterKey": "NodeAutoScalingGroupDesiredCapacity",
+        "ParameterValue": "2"
+    },
+    {
+        "ParameterKey": "NodeGroupName",
+        "ParameterValue": "Udacity Capstone nodes"
+    },
+    {
+        "ParameterKey": "NodeInstanceType",
+        "ParameterValue": "t3.micro"
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "udacity-devops-ssh"
+    }
+]

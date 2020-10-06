@@ -4,7 +4,7 @@
         "ParameterValue": "Udacity-DevOps-Capstone"
     },
     {
-        "ParameterKey": "VpcCIDR",
-        "ParameterValue": "10.0.0.0/16"
+        "ParameterKey": "ClusterName",
+        "ParameterValue": "udacity-devops-eks"
     }
 ]
