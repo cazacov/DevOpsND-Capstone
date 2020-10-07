@@ -170,6 +170,7 @@ Resources:
     Metadata:
       Comment: Subnet 01
     Properties:
+      MapPublicIpOnLaunch: true
       AvailabilityZone:
         Fn::Select:
         - '0'
@@ -182,12 +183,15 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub "${AWS::StackName}-PublicSubnet01"
+      - Key: kubernetes.io/role/elb
+        Value: 1
 
   PublicSubnet02:
     Type: AWS::EC2::Subnet
     Metadata:
       Comment: Subnet 02
     Properties:
+      MapPublicIpOnLaunch: true
       AvailabilityZone:
         Fn::Select:
         - '1'
@@ -200,6 +204,8 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub "${AWS::StackName}-PublicSubnet02"
+      - Key: kubernetes.io/role/elb
+        Value: 1
 
   PrivateSubnet01:
     Type: AWS::EC2::Subnet
@@ -218,6 +224,8 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub "${AWS::StackName}-PrivateSubnet01"
+      - Key: kubernetes.io/role/internal-elb
+        Value: 1
 
   PrivateSubnet02:
     Type: AWS::EC2::Subnet
@@ -236,6 +244,8 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub "${AWS::StackName}-PrivateSubnet02"
+      - Key: kubernetes.io/role/internal-elb
+        Value: 1
 
   PublicSubnet01RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation

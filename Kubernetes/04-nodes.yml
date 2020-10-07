@@ -23,6 +23,7 @@ Metadata:
           - NodeVolumeSize
           - KeyName
           - BootstrapArguments
+          - DisableIMDSv1
       - Label:
           default: Worker Network Configuration
 
@@ -78,6 +79,13 @@ Parameters:
     Default: /aws/service/eks/optimized-ami/1.14/amazon-linux-2/recommended/image_id
     Description: AWS Systems Manager Parameter Store parameter of the AMI ID for the worker node instances.
 
+  DisableIMDSv1:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "false"
+      - "true"
+          
   NodeInstanceType:
     Type: String
     Default: t3.medium
@@ -316,12 +324,33 @@ Parameters:
 #    Type: "List<AWS::EC2::Subnet::Id>"
 #    Description: The subnets where workers can be created.
 
+#  VpcId:
+#    Type: "AWS::EC2::VPC::Id"
+#    Description: The VPC of the worker instances
+
+Mappings:
+  PartitionMap:
+    aws:
+      EC2ServicePrincipal: "ec2.amazonaws.com"
+    aws-us-gov:
+      EC2ServicePrincipal: "ec2.amazonaws.com"
+    aws-cn:
+      EC2ServicePrincipal: "ec2.amazonaws.com.cn"
+    aws-iso:
+      EC2ServicePrincipal: "ec2.c2s.ic.gov"
+    aws-iso-b:
+      EC2ServicePrincipal: "ec2.sc2s.sgov.gov"
 
 Conditions:
   HasNodeImageId: !Not
     - "Fn::Equals":
-        - Ref: NodeImageId
-        - ""
+      - !Ref NodeImageId
+      - ""
+
+  IMDSv1Disabled:
+    "Fn::Equals":
+      - !Ref DisableIMDSv1
+      - "true"
 
 Resources:
   NodeInstanceRole:
@@ -333,13 +362,13 @@ Resources:
           - Effect: Allow
             Principal:
               Service:
-                - ec2.amazonaws.com
+                - !FindInMap [PartitionMap, !Ref "AWS::Partition", EC2ServicePrincipal]
             Action:
               - "sts:AssumeRole"
       ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-        - "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonEKS_CNI_Policy"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
       Path: /
 
   NodeInstanceProfile:
@@ -430,40 +459,50 @@ Resources:
         Fn::ImportValue: !Sub "${EnvironmentName}-SecurityGroup"
       ToPort: 443
 
-  NodeLaunchConfig:
-    Type: "AWS::AutoScaling::LaunchConfiguration"
+  NodeLaunchTemplate:
+    Type: "AWS::EC2::LaunchTemplate"
     Properties:
-      AssociatePublicIpAddress: "true"
-      BlockDeviceMappings:
-        - DeviceName: /dev/xvda
-          Ebs:
-            DeleteOnTermination: true
-            VolumeSize: !Ref NodeVolumeSize
-            VolumeType: gp2
-      IamInstanceProfile: !Ref NodeInstanceProfile
-      ImageId: !If
-        - HasNodeImageId
-        - Ref: NodeImageId
-        - Ref: NodeImageIdSSMParam
-      InstanceType: !Ref NodeInstanceType
-      KeyName: !Ref KeyName
-      SecurityGroups:
-        - Ref: NodeSecurityGroup
-      UserData: !Base64
-        "Fn::Sub": |
-          #!/bin/bash
-          set -o xtrace
-          /etc/eks/bootstrap.sh ${ClusterName} ${BootstrapArguments}
-          /opt/aws/bin/cfn-signal --exit-code $? \
-                   --stack  ${AWS::StackName} \
-                   --resource NodeGroup  \
-                   --region ${AWS::Region}
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              DeleteOnTermination: true
+              VolumeSize: !Ref NodeVolumeSize
+              VolumeType: gp2
+        IamInstanceProfile:
+          Arn: !GetAtt NodeInstanceProfile.Arn
+        ImageId: !If
+          - HasNodeImageId
+          - !Ref NodeImageId
+          - !Ref NodeImageIdSSMParam
+        InstanceType: !Ref NodeInstanceType
+        KeyName: !Ref KeyName
+        SecurityGroupIds:
+        - !Ref NodeSecurityGroup
+        UserData: !Base64
+          "Fn::Sub": |
+            #!/bin/bash
+            set -o xtrace
+            /etc/eks/bootstrap.sh ${ClusterName} ${BootstrapArguments}
+            /opt/aws/bin/cfn-signal --exit-code $? \
+                      --stack  ${AWS::StackName} \
+                      --resource NodeGroup  \
+                      --region ${AWS::Region}
+        MetadataOptions:
+          HttpPutResponseHopLimit : 2
+          HttpEndpoint: enabled
+          HttpTokens: !If
+            - IMDSv1Disabled
+            - required
+            - optional
 
   NodeGroup:
     Type: "AWS::AutoScaling::AutoScalingGroup"
     Properties:
       DesiredCapacity: !Ref NodeAutoScalingGroupDesiredCapacity
-      LaunchConfigurationName: !Ref NodeLaunchConfig
+      LaunchTemplate:
+        LaunchTemplateId: !Ref NodeLaunchTemplate
+        Version: !GetAtt NodeLaunchTemplate.LatestVersionNumber
       MaxSize: !Ref NodeAutoScalingGroupMaxSize
       MinSize: !Ref NodeAutoScalingGroupMinSize
       Tags:

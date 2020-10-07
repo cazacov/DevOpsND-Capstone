@@ -13,7 +13,7 @@
     },
     {
         "ParameterKey": "NodeGroupName",
-        "ParameterValue": "Udacity Capstone nodes"
+        "ParameterValue": "udacity-capstone-nodes"
     },
     {
         "ParameterKey": "NodeInstanceType",
