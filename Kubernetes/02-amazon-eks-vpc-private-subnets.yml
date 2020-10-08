@@ -33,6 +33,11 @@ Parameters:
       Description: An environment name that will be prefixed to resource names
       Type: String
       Default: Udacity-DevOps-Capstone
+  
+  ClusterName:
+    Description: Cluster name
+    Type: String
+    Default: udacity-devops-eks
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -226,6 +231,8 @@ Resources:
         Value: !Sub "${AWS::StackName}-PrivateSubnet01"
       - Key: kubernetes.io/role/internal-elb
         Value: 1
+      - Key: !Sub "kubernetes.io/cluster/${ClusterName}"
+        Value: shared
 
   PrivateSubnet02:
     Type: AWS::EC2::Subnet
@@ -246,6 +253,8 @@ Resources:
         Value: !Sub "${AWS::StackName}-PrivateSubnet02"
       - Key: kubernetes.io/role/internal-elb
         Value: 1
+      - Key: !Sub "kubernetes.io/cluster/${ClusterName}"
+        Value: shared
 
   PublicSubnet01RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation

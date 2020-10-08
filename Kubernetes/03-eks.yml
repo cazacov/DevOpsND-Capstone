@@ -25,3 +25,5 @@ Resources:
             - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
             - Fn::ImportValue: !Sub "${EnvironmentName}-PRI1-SN"
             - Fn::ImportValue: !Sub "${EnvironmentName}-PRI2-SN"
+
+    
