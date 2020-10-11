@@ -380,6 +380,7 @@ Resources:
 
   NodeSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
+    GroupName: !Sub "${ClusterName}-NodeSecurityGroup"
     Properties:
       GroupDescription: Security group for all nodes in the cluster
       Tags:
@@ -406,7 +407,7 @@ Resources:
       Description: Allow pods to communicate with the cluster API Server
       FromPort: 443
       GroupId: 
-        Fn::ImportValue: !Sub "${EnvironmentName}-SecurityGroup"
+        Fn::ImportValue: !Sub "${EnvironmentName}-ControlPlaneSecurityGroup"
       IpProtocol: tcp
       SourceSecurityGroupId: !Ref NodeSecurityGroup
       ToPort: 443
@@ -419,7 +420,7 @@ Resources:
       DestinationSecurityGroupId: !Ref NodeSecurityGroup
       FromPort: 1025
       GroupId: 
-        Fn::ImportValue: !Sub "${EnvironmentName}-SecurityGroup"
+        Fn::ImportValue: !Sub "${EnvironmentName}-ControlPlaneSecurityGroup"
       IpProtocol: tcp
       ToPort: 65535
 
@@ -431,7 +432,7 @@ Resources:
       DestinationSecurityGroupId: !Ref NodeSecurityGroup
       FromPort: 443
       GroupId: 
-        Fn::ImportValue: !Sub "${EnvironmentName}-SecurityGroup"
+        Fn::ImportValue: !Sub "${EnvironmentName}-ControlPlaneSecurityGroup"
       IpProtocol: tcp
       ToPort: 443
 
@@ -444,7 +445,7 @@ Resources:
       GroupId: !Ref NodeSecurityGroup
       IpProtocol: tcp
       SourceSecurityGroupId: 
-        Fn::ImportValue: !Sub "${EnvironmentName}-SecurityGroup"
+        Fn::ImportValue: !Sub "${EnvironmentName}-ControlPlaneSecurityGroup"
       ToPort: 65535
 
   NodeSecurityGroupFromControlPlaneOn443Ingress:
@@ -456,8 +457,19 @@ Resources:
       GroupId: !Ref NodeSecurityGroup
       IpProtocol: tcp
       SourceSecurityGroupId: 
-        Fn::ImportValue: !Sub "${EnvironmentName}-SecurityGroup"
+        Fn::ImportValue: !Sub "${EnvironmentName}-ControlPlaneSecurityGroup"
       ToPort: 443
+
+#  NodeSecurityGroupIngress:
+#    Type: "AWS::EC2::SecurityGroupIngress"
+#    DependsOn: NodeSecurityGroup
+#    Properties:
+#      Description: Allow bastion servers to communicate with the nodes over SSH
+#      FromPort: 22
+#      ToPort: 22
+#      GroupId: !Ref NodeSecurityGroup
+#      IpProtocol: tcp
+   
 
   NodeLaunchTemplate:
     Type: "AWS::EC2::LaunchTemplate"

@@ -1,29 +1,41 @@
 Parameters:
-    ClusterName:
-        Description: Cluster name
-        Type: String
-        Default: udacity-devops-eks
+  ClusterName:
+      Description: Cluster name
+      Type: String
+      Default: udacity-devops-eks
 
-    EnvironmentName:
-        Description: An environment name that will be prefixed to resource names
-        Type: String
-        Default: Udacity-DevOps-Capstone
+  EnvironmentName:
+      Description: An environment name that will be prefixed to resource names
+      Type: String
+      Default: Udacity-DevOps-Capstone
                 
   
 Resources:
-    EKSCluster:
-        Type: AWS::EKS::Cluster
-        Properties:
-          Name: !Ref ClusterName
-          RoleArn: 
-            Fn::ImportValue: !Sub "${EnvironmentName}-EKSIAMRoleArn"
-          ResourcesVpcConfig:
-            SecurityGroupIds:
-            - Fn::ImportValue: !Sub "${EnvironmentName}-SecurityGroup"
-            SubnetIds:
-            - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
-            - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
-            - Fn::ImportValue: !Sub "${EnvironmentName}-PRI1-SN"
-            - Fn::ImportValue: !Sub "${EnvironmentName}-PRI2-SN"
+  ControlPlaneSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Cluster communication with worker nodes
+      VpcId: 
+        Fn::ImportValue: !Sub "${EnvironmentName}-VpcId"
 
-    
+  EKSCluster:
+      Type: AWS::EKS::Cluster
+      Properties:
+        Name: !Ref ClusterName
+        RoleArn: 
+          Fn::ImportValue: !Sub "${EnvironmentName}-EKSIAMRoleArn"
+        ResourcesVpcConfig:
+          SecurityGroupIds: 
+          - !Ref ControlPlaneSecurityGroup
+          SubnetIds:
+          - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
+          - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
+          - Fn::ImportValue: !Sub "${EnvironmentName}-PRI1-SN"
+          - Fn::ImportValue: !Sub "${EnvironmentName}-PRI2-SN"
+
+Outputs:          
+  SecurityGroup:
+    Description: Security group for the cluster control plane communication with worker nodes
+    Value: !Ref ControlPlaneSecurityGroup
+    Export:
+      Name: !Sub ${EnvironmentName}-ControlPlaneSecurityGroup    
