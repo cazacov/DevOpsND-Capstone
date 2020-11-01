@@ -26,3 +26,11 @@ Create EKS nodes
 ```bash
 ./04-create-nodes.sh
 ```
+
+Inport Kubernetes configuration
+```bash
+aws eks --region us-west-2 update-kubeconfig --name udacity-devops-eks
+
+### Check connection
+kubectl get pods --all-namespaces
+```
