@@ -380,8 +380,8 @@ Resources:
 
   NodeSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
-    GroupName: !Sub "${ClusterName}-NodeSecurityGroup"
     Properties:
+      GroupName: !Sub "${ClusterName}-NodeSecurityGroup"
       GroupDescription: Security group for all nodes in the cluster
       Tags:
         - Key: !Sub kubernetes.io/cluster/${ClusterName}
