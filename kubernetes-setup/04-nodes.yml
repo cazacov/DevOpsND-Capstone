@@ -52,7 +52,7 @@ Parameters:
 
   NodeAutoScalingGroupDesiredCapacity:
     Type: Number
-    Default: 3
+    Default: 2
     Description: Desired capacity of Node Group ASG.
 
   NodeAutoScalingGroupMaxSize:
@@ -460,6 +460,17 @@ Resources:
         Fn::ImportValue: !Sub "${EnvironmentName}-ControlPlaneSecurityGroup"
       ToPort: 443
 
+  NodeSecurityGroupHttp:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    DependsOn: NodeSecurityGroup
+    Properties:
+      Description: Allow K8s load balancers get inbound HTTP traffic
+      FromPort: 80
+      ToPort: 80
+      IpProtocol: tcp
+      GroupId: !Ref NodeSecurityGroup
+          
+
 #  NodeSecurityGroupIngress:
 #    Type: "AWS::EC2::SecurityGroupIngress"
 #    DependsOn: NodeSecurityGroup
@@ -521,6 +532,22 @@ Resources:
       Subnets:
         - Fn::ImportValue: !Sub "${EnvironmentName}-PRI1-SN"
         - Fn::ImportValue: !Sub "${EnvironmentName}-PRI2-SN"
+
+  NodeGroupPub:
+    Type: 'AWS::EKS::Nodegroup'
+    Properties:
+      ClusterName: !Ref ClusterName
+      NodegroupName: "udacity-capstone-public"
+      NodeRole: !GetAtt NodeInstanceRole.Arn
+      LaunchTemplate: 
+        Id: !Ref NodeLaunchTemplate
+      ScalingConfig:
+        MinSize: !Ref NodeAutoScalingGroupMinSize
+        DesiredSize: !Ref NodeAutoScalingGroupDesiredCapacity
+        MaxSize: !Ref NodeAutoScalingGroupMaxSize
+      Subnets:
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
 
 Outputs:
   NodeInstanceRole:
