@@ -14,6 +14,9 @@ echo "Docker ID and Image: $dockerpath"
 # Authenticate
 docker login -u cazacov
 
+# Build
+docker build --tag=capstone .
+
 # Tag
 docker tag capstone $dockerpath
 

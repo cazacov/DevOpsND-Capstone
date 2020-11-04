@@ -8,7 +8,7 @@ docker build --tag=capstone .
 
 # Step 2: 
 # List docker images
-docker image ls cpstone*
+docker image ls capstone*
 
 # Step 3: 
 # Run interactive shell
