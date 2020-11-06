@@ -4,7 +4,7 @@ Capstone Project of Udacity Cloud DevOps Engineer Nanodegree
 ## Setup
 
 ```bash
-cd Kubernetes
+cd kubernetes-setup
 ```
 
 Create IAM
@@ -27,10 +27,56 @@ Create EKS nodes
 ./04-create-nodes.sh
 ```
 
-Inport Kubernetes configuration
+Import Kubernetes configuration
 ```bash
 aws eks --region us-west-2 update-kubeconfig --name udacity-devops-eks
 
 ### Check connection
 kubectl get pods --all-namespaces
+```
+
+Install Jenkins and bastion VM
+```bash
+./05-create-jenkins.sh
+```
+
+Deploy SSH key to the bastion VM
+```bash
+scp -i ~/.ssh/udacity-devops-ssh.pem ~/.ssh/udacity-devops-ssh.pem ubuntu@BASTION:~/.ssh/
+```
+
+## Manual build & deploy
+
+### Build and Push
+
+```bash
+cd ./webapp
+
+dockerpath=cazacov/learning:capstone
+
+
+# Authenticate
+docker login -u cazacov
+
+# Build
+docker build --tag=capstone .
+
+# Tag
+docker tag capstone $dockerpath
+
+# Push image to a docker repository
+docker push $dockerpath
+```
+
+### Deploy
+
+```bash
+cd ./kubernetes-deployment
+
+kubectl apply -f deployment.yaml
+```
+
+### Check what's running on K8s
+```bash
+kubectl get all -n default
 ```

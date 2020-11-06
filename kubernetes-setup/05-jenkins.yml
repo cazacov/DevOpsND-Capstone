@@ -1,0 +1,271 @@
+Description: >
+    Victor Cazacov 
+    This template deploys web-servers in an autoscale group, sets security groups,
+    deploys load-balancer that provides public access to that web-servers
+
+Parameters:
+  EnvironmentName:
+      Description: An environment name that will be prefixed to resource names
+      Type: String
+
+  InstanceType:
+      Description: AWS instance type. It should be t3.small or better.
+      Type: String
+      Default: t3.small
+
+  KeyName:
+    Description: SSH Key to login
+    Type: String
+
+  ImageId:
+    Description: AWS image-id. Should include apt package manager. Ubuntu 18 recommended.
+    Type: String
+    Default: ami-003634241a8fcdec0
+
+Resources:
+
+# Web-servers security group        
+# Allow inbound port 8080 for Jenkins web-site
+# Allow inbound port 22 for SSH
+# Unrestricted outbound connections
+  WebServerSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to our hosts
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VpcId"
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 8080
+        ToPort: 8080
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 0
+        ToPort: 65535
+        CidrIp: 0.0.0.0/0
+
+  WebServerInboundFromBastion:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref WebServerSecGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !Ref BastionSecurityGroup
+
+  WebAppLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          # Step 1 - Update existing packages
+          sudo apt-get update -y
+          # Step 2 - Install Java
+          sudo apt install -y default-jdk
+          Step 3 - add a key to your system
+          wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+          # Step 4 - Add the following entry in your /etc/apt/sources.list:
+          sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+          # Step 5 -Update your local package index
+          sudo apt-get update
+          # Step 6 - Install Jenkins
+          sudo apt-get install -y jenkins
+          # Step 7 - Start the Jenkins server
+          sudo systemctl start jenkins
+          # Step 8 - Enable the service to load during boot
+          sudo systemctl enable jenkins
+      ImageId: !Ref ImageId
+      SecurityGroups:
+      - Ref: WebServerSecGroup
+      IamInstanceProfile: 
+        Ref: JenkinsInstanceProfile      
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      BlockDeviceMappings:
+      - DeviceName: "/dev/sdk"
+        Ebs:
+          VolumeSize: '10'
+
+  WebAppGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: 
+        !Sub "${EnvironmentName}-JenkinsASG"
+      VPCZoneIdentifier:
+      - Fn::ImportValue: 
+          !Sub "${EnvironmentName}-PRIV-NETS"
+      LaunchConfigurationName:
+        Ref: WebAppLaunchConfig
+      DesiredCapacity: '1'
+      MinSize: '1'
+      MaxSize: '2'
+      TargetGroupARNs:
+      - Ref: WebAppTargetGroup
+
+  WebAppTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 20
+      HealthyThresholdCount: 3
+      Port: 8080
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: 
+        Fn::ImportValue:
+          Fn::Sub: "${EnvironmentName}-VpcId"
+      Name: !Sub "${EnvironmentName}-CI-TG"
+
+# Load-balancer security group
+  LBSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to our load balancer
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VpcId"
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 8080
+        ToPort: 8080
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 8080
+        ToPort: 8080
+        CidrIp: 0.0.0.0/0
+
+# Load balancer in  public subnets          
+  WebAppLB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Subnets:
+      - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
+      - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
+      SecurityGroups:
+      - Ref: LBSecGroup
+      Name: !Sub "${EnvironmentName}-CI-LB"
+  
+# Application load balance listener
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn:
+          Ref: WebAppTargetGroup
+      LoadBalancerArn:
+        Ref: WebAppLB
+      Port: '8080'
+      Protocol: HTTP
+
+# Listen on /, forward the requests to the target group      
+  ALBListenerRule:
+      Type: AWS::ElasticLoadBalancingV2::ListenerRule
+      Properties:
+        Actions:
+        - Type: forward
+          TargetGroupArn: !Ref 'WebAppTargetGroup'
+        Conditions:
+        - Field: path-pattern
+          Values: [/]
+        ListenerArn: !Ref 'Listener'
+        Priority: 1
+  
+# Instance profile contains the IAM Role name(s) that we want to associate to our auto scaling EC2 Servers
+# Can read S3 resources
+  JenkinsInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: 
+      Path: "/"
+      InstanceProfileName: !Sub "${EnvironmentName}-jenkinsInstanceProfile"
+      Roles:
+      - !Ref S3ReadonlyRole
+
+  S3ReadonlyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::Region}-${EnvironmentName}-S3ReadonlyRole"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+  
+  RolePolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: s3readonly
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action:
+          - s3:Get*
+          - s3:List
+          Resource: "*"
+      Roles:
+      - !Ref S3ReadonlyRole  
+
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: "t3.micro"
+      KeyName: !Ref KeyName
+      SubnetId: 
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-PUB1-SN"
+      SecurityGroupIds:
+        - !Ref BastionSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-Bastion'      
+
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription:
+        !Sub 'Security group for ${AWS::StackName} bastion host'
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VpcId"
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+
+  BastionOutboundConnections:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref BastionSecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      DestinationSecurityGroupId: !Ref WebServerSecGroup
+
+# Outputs: 
+Outputs: 
+  JenkinsUrl: 
+    Description: Public URL of the load balancer
+    Value: !Join ["", ["http://", !GetAtt WebAppLB.DNSName, ":8080/"]]
+    Export:
+      Name: !Sub ${EnvironmentName}-JenkinsURL
+
+  BastionUrl: 
+    Description: Public address of the bastion
+    Value: !Join ["", ["ubuntu@", !GetAtt [ "BastionInstance", "PublicIp" ]]]
+    Export:
+      Name: !Sub ${EnvironmentName}-Bastion    
+

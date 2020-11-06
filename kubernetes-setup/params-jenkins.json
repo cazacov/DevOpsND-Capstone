@@ -1,0 +1,14 @@
+[
+    {
+        "ParameterKey": "EnvironmentName",
+        "ParameterValue": "Udacity-DevOps-Capstone"
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "udacity-devops-ssh"
+    },
+    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "t3.small"
+    }
+]
