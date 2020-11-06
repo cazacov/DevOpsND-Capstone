@@ -532,6 +532,10 @@ Resources:
       Subnets:
         - Fn::ImportValue: !Sub "${EnvironmentName}-PRI1-SN"
         - Fn::ImportValue: !Sub "${EnvironmentName}-PRI2-SN"
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-K8s-Private' 
+          PropagateAtLaunch: true
 
   NodeGroupPub:
     Type: 'AWS::EKS::Nodegroup'
@@ -548,6 +552,10 @@ Resources:
       Subnets:
         - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
         - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-K8s-Public' 
+          PropagateAtLaunch: true
 
 Outputs:
   NodeInstanceRole:

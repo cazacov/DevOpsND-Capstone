@@ -1,7 +1,6 @@
 Description: >
     Victor Cazacov 
-    This template deploys web-servers in an autoscale group, sets security groups,
-    deploys load-balancer that provides public access to that web-servers
+    This template deploys Jenkins and bastion VM
 
 Parameters:
   EnvironmentName:
@@ -104,6 +103,10 @@ Resources:
       MaxSize: '2'
       TargetGroupARNs:
       - Ref: WebAppTargetGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-Jenkins' 
+          PropagateAtLaunch: true
 
   WebAppTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -268,4 +271,3 @@ Outputs:
     Value: !Join ["", ["ubuntu@", !GetAtt [ "BastionInstance", "PublicIp" ]]]
     Export:
       Name: !Sub ${EnvironmentName}-Bastion    
-
