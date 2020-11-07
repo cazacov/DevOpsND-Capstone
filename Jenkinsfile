@@ -2,6 +2,7 @@ pipeline {
     environment { 
         registry = "cazacov/learning" 
         registryCredentials = 'dockerhub_credentials' 
+        k8sCredentials = 'eks_kubeconfig'
         dockerImage = '' 
     }
     agent any 
@@ -36,7 +37,7 @@ pipeline {
         stage('Deploy web-app to Kubernetes') {
             steps {
                 script {
-                    kubernetesDeploy(configs: "./kubernetes-deployment/deployment.yaml", kubeconfigId: "eks_kubeconfig")
+                    kubernetesDeploy(configs: "$workspace/kubernetes-deployment/deployment.yaml", kubeconfigId: k8sCredentials)
                 }
             }
         }
