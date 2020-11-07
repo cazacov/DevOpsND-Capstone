@@ -1,6 +1,6 @@
 Description: >
     Victor Cazacov
-    This template deploys a VPC with EKS cluster
+    This template creates an IAM Role for EKS
 
 Parameters:
   # Paramenters are entirely optional.

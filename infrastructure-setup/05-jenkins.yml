@@ -1,6 +1,6 @@
 Description: >
     Victor Cazacov 
-    This template deploys Jenkins and bastion VM
+    Deploys Jenkins and bastion VM
 
 Parameters:
   EnvironmentName:

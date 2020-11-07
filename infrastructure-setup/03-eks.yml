@@ -1,3 +1,7 @@
+Description: >
+    Victor Cazacov
+    EKS cluster and control plane security group
+
 Parameters:
   ClusterName:
       Description: Cluster name

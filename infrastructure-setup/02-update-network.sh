@@ -2,6 +2,6 @@
 
 aws cloudformation update-stack \
     --stack-name udacity-devops-net \
-    --template-body file://02-amazon-eks-vpc-private-subnets.yml \
+    --template-body file://02-networks.yml \
     --parameters file://params-cluster.json \
     --region us-west-2 

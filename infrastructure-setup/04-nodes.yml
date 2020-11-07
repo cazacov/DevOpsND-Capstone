@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: Amazon EKS - Node Group
+Description: Amazon EKS - Node groups for private and public networks
 
 Metadata:
   "AWS::CloudFormation::Interface":
@@ -37,10 +37,6 @@ Parameters:
     Type: String
     Default: ""
     Description: "Arguments to pass to the bootstrap script. See files/bootstrap.sh in https://github.com/awslabs/amazon-eks-ami"
-
-#  ClusterControlPlaneSecurityGroup:
-#    Type: "AWS::EC2::SecurityGroup::Id"
-#    Description: The security group of the cluster control plane.
 
   ClusterName:
     Type: String
