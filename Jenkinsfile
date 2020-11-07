@@ -37,7 +37,7 @@ pipeline {
         stage('Deploy web-app to Kubernetes') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: 'secret', variable: 'KUBECONFIG')]) {
+                    withCredentials([file(credentialsId: 'eks_kubeconfig', variable: 'KUBECONFIG')]) {
                         sh 'echo $KUBECONFIG'
                     }
                 }
