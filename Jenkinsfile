@@ -28,8 +28,16 @@ pipeline {
                 script { 
                     docker.withRegistry( '', registryCredentials) { 
                         dockerImage.push() 
+                        dockerImage.push('latest') 
                     }
                 } 
+            }
+        }
+        stage('Deploy web-app to Kubernetes') {
+            steps {
+                script {
+                    kubernetesDeploy(configs: "./kubernetes-deployment/deployment.yml", kubeconfigId: "eks_kubeconfig")
+                }
             }
         }
     }
