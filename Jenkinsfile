@@ -2,7 +2,6 @@ pipeline {
     environment { 
         registry = "cazacov/learning" 
         registryCredentials = 'dockerhub_credentials' 
-        k8sCredentials = 'eks_kubeconfig'
         dockerImage = '' 
     }
     agent any 
@@ -37,7 +36,7 @@ pipeline {
         stage('Deploy web-app to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig([credentialsId: k8sCredentials]) {
+                    withKubeConfig([credentialsId: 'eks_file', contextName: 'arn:aws:eks:us-west-2:579060413136:cluster/udacity-devops-eks']) {
                       sh 'kubectl apply -f kubernetes-deployment/deployment.yaml'
                     }
                 }
