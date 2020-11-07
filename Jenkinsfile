@@ -1,7 +1,7 @@
 pipeline {
     environment { 
         registry = "cazacov/learning" 
-        registryCredential = 'dockerhub_credentials' 
+        registryCredentials = 'dockerhub_credentials' 
         dockerImage = '' 
     }
     agent any 
@@ -22,6 +22,15 @@ pipeline {
                     dockerImage = docker.build(registry + ":$BUILD_NUMBER", "./webapp") 
                 }
             } 
+        } 
+        stage('Deploy image to DockerHub') { 
+            steps { 
+                script { 
+                    docker.withRegistry( '', registryCredentials) { 
+                        dockerImage.push() 
+                    }
+                } 
+            }
         }
     }
 }
