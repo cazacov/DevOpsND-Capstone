@@ -37,8 +37,8 @@ pipeline {
         stage('Deploy web-app to Kubernetes') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: 'eks_kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh 'echo $KUBECONFIG'
+                    withKubeConfig([credentialsId: k8sCredentials]) {
+                      sh 'kubectl apply -f kubernetes-deployment/deployment.yaml'
                     }
                 }
             }
