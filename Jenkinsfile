@@ -36,9 +36,10 @@ pipeline {
         stage('Deploy web-app to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig([credentialsId: 'eks_file', contextName: 'arn:aws:eks:us-west-2:579060413136:cluster/udacity-devops-eks']) {
-                      sh 'echo $KUBECONFIG'
-                      sh 'kubectl apply -f kubernetes-deployment/deployment.yaml --kubeconfig $KUBECONFIG'
+                    withAWS(credentials: 'aws-credentials', region: 'us-west-2') {
+                        withKubeConfig([credentialsId: 'eks_file', contextName: 'arn:aws:eks:us-west-2:579060413136:cluster/udacity-devops-eks']) {
+                           sh 'kubectl apply -f kubernetes-deployment/deployment.yaml --kubeconfig $KUBECONFIG'
+                        }
                     }
                 }
             }
