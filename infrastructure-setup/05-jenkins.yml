@@ -70,15 +70,18 @@ Resources:
           sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
           # Step 5 -Update your local package index
           sudo apt-get update
-          # Step 6 - Install Jenkins
-          sudo apt-get install -y jenkins
-          # Step 7 - Start the Jenkins server
-          sudo systemctl start jenkins
-          # Step 8 - Enable the service to load during boot
-          sudo systemctl enable jenkins
-          # Install third party tools
+          # Step 6 - Install third party tools
           # HTML checker
           sudo apt-get install -y tidy
+          # Docker
+          sudo apt-get install -y docker.io  
+          # Step 7 - Install Jenkins
+          sudo apt-get install -y jenkins
+          sudo usermod -aG docker jenkins
+          # Step 8 - Start the Jenkins server
+          sudo systemctl start jenkins
+          # Step 9 - Enable the service to load during boot
+          sudo systemctl enable jenkins
       ImageId: !Ref ImageId
       SecurityGroups:
       - Ref: WebServerSecGroup

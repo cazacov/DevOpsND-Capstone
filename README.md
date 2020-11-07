@@ -82,12 +82,19 @@ From the Bastion VM we can now reach the Jenkins server and read the key:
 
 ```bash
 ssh -i ~/.ssh/udacity-devops-ssh.pem ubuntu@JENKINS
+
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```
 
 After successful login in Jenkins on the "geeting started" page install suggested plugins.
 
 ![Screenshot Jenkins plugins](./_img/jenkins_default_plugins.png)
+
+Under Manage Jenkins -> Manage Plugins install Blue Ocean and Aqua.
+
+Under Manage Jenkins -> Global Tool Configuration -> Docker add the local Docker installation (should be located at /usr/bin).
+
+
 
 
 ## Configuring CI/CD Pipeline
@@ -109,32 +116,46 @@ If there are HTML errors, the Jenkins build will fail and you can see what's wro
 
 ![Screenshot Jenkins Lint HTML](./_img/jenkins-lint-html.png)
 
+After HTML errors are fixed and changes pushed to the GitHub the status of pipeline shoud automatically chnage to green:
+
+![Screenshot Jenkins Lint HTML](./_img/jenkins-html-ok.png)
 
 
-## Manual build & deploy
+## Deploying to Kubernetes
 
-### Build and Push
+Before automating deployment with Jenkins you may wish to test your Docker build process locally.
+
+### Manual Build
 
 ```bash
 cd ./webapp
-
 dockerpath=cazacov/learning:capstone
+```
 
+Authenticate at Docker
 
-# Authenticate
+```bash
 docker login -u cazacov
+```
 
-# Build
+Build the image
+
+```bash
 docker build --tag=capstone .
+```
 
-# Tag
+Tag it
+
+```bash
 docker tag capstone $dockerpath
+```
 
-# Push image to a docker repository
+Push the image to the DockerHub repository
+```bash
 docker push $dockerpath
 ```
 
-### Deploy
+Deploy to Kubernetes
 
 ```bash
 cd ./kubernetes-deployment
@@ -142,7 +163,19 @@ cd ./kubernetes-deployment
 kubectl apply -f deployment.yaml
 ```
 
-### Check what's running on K8s
+Check what's running on K8s
+
 ```bash
 kubectl get all -n default
 ```
+
+You should see 2 pods in the private subnet that run instances of the capstone container and the load-balancer in the public subnet that has external IP address.
+
+![Screenshot Kubernetes](./_img/k8s.png)
+
+Using that URL you can access the webapplication in browser:
+
+![Screenshot Kubernetes](./_img/webapp.png)
+
+
+### Automated Deployment with Jenkins
