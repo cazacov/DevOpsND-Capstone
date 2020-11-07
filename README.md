@@ -58,10 +58,38 @@ The stacks expose variables like Jenkins URL and public IP of the bastion VM:
 
 ![Screenshot Cloudformation exports](./_img/cf_exports.png)
 
-Deploy SSH key to the bastion VM
+## Configure Jenkins
+
+The public URL of the Jenkins load-balancer is exposed as Cloudformation stack variable. When you access it for the first time the Jenkins will ask for unlock key:
+
+![Screenshot Jenkins unlock](./_img/jenkins_unlock.png)
+
+To access the file system of the Jenkins VM that runs in a private subnet on AWS we need to login at the Bastion VM first. Then from the Bastion VM we can open SSH connection to the Jenkins server. There is security group that allows Bastion VM open outbound connections with port 22 (SSH) only to the Jenkins server. Also the Jenkins server has security group assigned that allows inbound SSH connections only from the Bastion VM.
+
+Deploy SSH key to the Bastion VM
+
 ```bash
 scp -i ~/.ssh/udacity-devops-ssh.pem ~/.ssh/udacity-devops-ssh.pem ubuntu@BASTION:~/.ssh/
 ```
+
+Open SSH connection to Bastion VM
+
+```bash
+ssh -i ~/.ssh/udacity-devops-ssh.pem ubuntu@BASTION
+```
+
+From the Bastion VM we can now reach the Jenkins server and read the key:
+
+```bash
+ssh -i ~/.ssh/udacity-devops-ssh.pem ubuntu@JENKINS
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+
+After successful login in Jenkins on the "geeting started" page install suggested plugins.
+
+![Screenshot Jenkins plugins](./_img/jenkins_default_plugins.png)
+
+
 
 ## Manual build & deploy
 
