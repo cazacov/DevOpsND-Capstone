@@ -1,4 +1,9 @@
 pipeline {
+    environment { 
+        registry = "cazacov/learning" 
+        registryCredential = 'dockerhub_credentials' 
+        dockerImage = '' 
+    }
     agent any 
     stages {
         stage ('Build') {
@@ -11,5 +16,12 @@ pipeline {
                   sh 'tidy -q -e webapp/*.html'
               }
          }
+        stage('Building Docker image') { 
+            steps { 
+                script { 
+                    dockerImage = docker.build(registry + ":$BUILD_NUMBER", "./webapp") 
+                }
+            } 
+        }
     }
 }

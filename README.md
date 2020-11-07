@@ -169,13 +169,15 @@ Check what's running on K8s
 kubectl get all -n default
 ```
 
-You should see 2 pods in the private subnet that run instances of the capstone container and the load-balancer in the public subnet that has external IP address.
+You should see two Kubernetes pods in the private subnet that run instances of the web-app container and a load-balancer in the public subnet that has external IP address.
 
 ![Screenshot Kubernetes](./_img/k8s.png)
 
-Using that URL you can access the webapplication in browser:
+Using that external URL you can access the webapplication in browser:
 
 ![Screenshot Kubernetes](./_img/webapp.png)
 
 
 ### Automated Deployment with Jenkins
+
+In Jenkins -> Manage Jenkins -> Plugin Manager install Docker Pipeline plugin.
