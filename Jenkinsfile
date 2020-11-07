@@ -37,7 +37,7 @@ pipeline {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'eks_file', contextName: 'arn:aws:eks:us-west-2:579060413136:cluster/udacity-devops-eks']) {
-                      sh 'kubectl apply -f kubernetes-deployment/deployment.yaml'
+                      sh 'echo $KUBECONFIG'
                     }
                 }
             }

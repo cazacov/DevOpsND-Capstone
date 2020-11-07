@@ -1,6 +1,11 @@
 # DevOpsND-Capstone
 Capstone Project of Udacity Cloud DevOps Engineer Nanodegree
 
+## Prerequisites
+- AWS CLI for Linux
+- Docker
+- kubectl
+
 ## Infrastructure Setup
 
 ### Install Kubernetes
