@@ -99,6 +99,18 @@ In the pipeline settings choose to scan repository for changes every minute:
 ![Screenshot Jenkins trigger](./_img/jenkins-trigger.png)
 
 
+## Build Pipeline
+
+### Lint HTML
+
+This step uses [tidy utility](https://www.html-tidy.org/) to check if our web application HTML have markup errors, contain deprecated legacy code, etc.
+
+If there are HTML errors, the Jenkins build will fail and you can see what's wrong in the tidy output:
+
+![Screenshot Jenkins Lint HTML](./_img/jenkins-lint-html.png)
+
+
+
 ## Manual build & deploy
 
 ### Build and Push
