@@ -76,6 +76,9 @@ Resources:
           sudo systemctl start jenkins
           # Step 8 - Enable the service to load during boot
           sudo systemctl enable jenkins
+          # Install third party tools
+          # HTML checker
+          sudo apt-get install -y tidy
       ImageId: !Ref ImageId
       SecurityGroups:
       - Ref: WebServerSecGroup

@@ -90,6 +90,14 @@ After successful login in Jenkins on the "geeting started" page install suggeste
 ![Screenshot Jenkins plugins](./_img/jenkins_default_plugins.png)
 
 
+## Configuring CI/CD Pipeline
+
+Create new Jenlins pipeline and select this GitHub repo as source.
+
+In the pipeline settings choose to scan repository for changes every minute:
+
+![Screenshot Jenkins trigger](./_img/jenkins-trigger.png)
+
 
 ## Manual build & deploy
 
