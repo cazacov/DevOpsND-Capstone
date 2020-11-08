@@ -224,7 +224,7 @@ mapUsers: |
     - system:masters
 ```        
 
-where "jenkins" is the user name that will make the deployments (Jenkins server runs as this Linux account by default). 579060413136 is my AWS-id, you can find yours in the output of CloudFormation export for the EKS IAM Role on the screenshot in the section "Install Jenkins".
+where "jenkins" is the user name that will make the deployments (Jenkins server runs as this Linux account by default). 579060413136 is my AWS-id, you can find yours in the output of CloudFormation export for the EKS IAM Role. (see screenshot in the section "Install Jenkins").
 
 ### Deployment steps in the Jenkinsfile
 
@@ -300,10 +300,10 @@ Running command "kubectl get pods" right after after the push you can catch the 
 
 ![Screenshot Rolling Update](./_img/rolling-update.png)
 
-The headers of the HTML page tell browser not to cache the content and refresh page every 10 seconds. Shortly after the build, the page should automatically display the new version with the latest build number:
+The headers of the HTML page tell browser not to cache the content and refresh page every 10 seconds. Shortly after the build the page should automatically display the new version with the latest build number:
 
 ![Screenshot Build Version](./_img/buildversion.png)
 
-The developer can control the status of the build process on the Jenkins pipeline screen:
+The developer can control the status of the build process with the Jenkins pipeline screen:
 
 ![Screenshot Build Version](./_img/pipeline.png)
