@@ -316,13 +316,6 @@ Parameters:
     Default: 20
     Description: Node volume size
 
-#  Subnets:
-#    Type: "List<AWS::EC2::Subnet::Id>"
-#    Description: The subnets where workers can be created.
-
-#  VpcId:
-#    Type: "AWS::EC2::VPC::Id"
-#    Description: The VPC of the worker instances
 
 Mappings:
   PartitionMap:
@@ -466,16 +459,6 @@ Resources:
       IpProtocol: tcp
       GroupId: !Ref NodeSecurityGroup
           
-
-#  NodeSecurityGroupIngress:
-#    Type: "AWS::EC2::SecurityGroupIngress"
-#    DependsOn: NodeSecurityGroup
-#    Properties:
-#      Description: Allow bastion servers to communicate with the nodes over SSH
-#      FromPort: 22
-#      ToPort: 22
-#      GroupId: !Ref NodeSecurityGroup
-#      IpProtocol: tcp
 
   NodeLaunchTemplate:
     Type: "AWS::EC2::LaunchTemplate"

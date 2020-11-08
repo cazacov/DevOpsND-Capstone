@@ -19,6 +19,7 @@ pipeline {
         stage('Building Docker image') { 
             steps { 
                 script { 
+                    sh 'sed -i "s/BUILDNUMBER/$BUILD_NUMBER/g" webapp/index.html'
                     dockerImage = docker.build(registry + ":$BUILD_NUMBER", "./webapp") 
                 }
             } 
