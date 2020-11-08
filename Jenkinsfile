@@ -37,12 +37,9 @@ pipeline {
         stage('Deploy web-app to Kubernetes') {
             steps {
                 script {
-                    withAWS(credentials: 'aws-credentials', region: 'us-west-2') {
-                        sh 'sed "s/latest/$BUILD_NUMBER/g" kubernetes-deployment/deployment.yaml > deployment.yaml'
-                        sh 'cat deployment.yaml'                        
-                        withKubeConfig([credentialsId: 'eks_file', contextName: 'arn:aws:eks:us-west-2:579060413136:cluster/udacity-devops-eks']) {
-                           sh 'kubectl apply -f deployment.yaml --kubeconfig $KUBECONFIG'
-                        }
+                    sh 'sed -i "s/latest/$BUILD_NUMBER/g" kubernetes-deployment/deployment.yaml'
+                    withKubeConfig([credentialsId: 'eks_file', contextName: 'arn:aws:eks:us-west-2:579060413136:cluster/udacity-devops-eks']) {
+                        sh 'kubectl apply -f kubernetes-deployment/deployment.yaml'
                     }
                 }
             }
