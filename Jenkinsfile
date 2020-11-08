@@ -40,7 +40,7 @@ pipeline {
                     withAWS(credentials: 'aws-credentials', region: 'us-west-2') {
                         sh 'sed -i "s/latest/$BUILD_NUMBER/g" kubernetes-deployment/deployment.yaml'
                         withKubeConfig([credentialsId: 'eks_file', contextName: 'arn:aws:eks:us-west-2:579060413136:cluster/udacity-devops-eks']) {
-                           sh 'kubectl apply -f kubernetes-deployment/deployment.yaml --kubeconfig $KUBECONFIG'
+                           sh 'kubectl apply -f kubernetes-deployment/deployment.yaml'
                         }
                     }
                 }
