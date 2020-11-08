@@ -16,7 +16,7 @@ pipeline {
                   sh 'tidy -q -e webapp/*.html'
               }
          }
-        stage('Building Docker image') { 
+        stage('Build Docker image') { 
             steps { 
                 script { 
                     sh 'sed -i "s/BUILDNUMBER/$BUILD_NUMBER/g" webapp/index.html'

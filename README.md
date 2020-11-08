@@ -126,15 +126,13 @@ After HTML errors are fixed and changes pushed to the GitHub the status of pipel
 ![Screenshot Jenkins Lint HTML](./_img/jenkins-html-ok.png)
 
 
-## Deploying to Kubernetes
+## Manual Deployment to Kubernetes
 
 Before automating deployment with Jenkins you may wish to test your Docker build process locally.
 
-### Manual Build
-
 ```bash
 cd ./webapp
-dockerpath=cazacov/learning:capstone
+dockerpath=cazacov/learning:latest
 ```
 
 Authenticate at Docker
@@ -183,6 +181,73 @@ Using that external URL you can access the webapplication in browser:
 ![Screenshot Kubernetes](./_img/webapp.png)
 
 
-### Automated Deployment with Jenkins
+## Automated Deployment with Jenkins
 
-In Jenkins -> Manage Jenkins -> Plugin Manager install Docker Pipeline plugin.
+In Jenkins -> Manage Jenkins -> Plugin Manager install following plugins:
+- Docker Pipeline
+- Pipeline: AWS Steps
+- Kubernetes CLI plugin
+
+In Jenkins -> Manage Jenkins -> Manage Credentials store in the global scope following credentials:
+- dockerhub_credentials  - Login/Password for DockerHub communication
+- eks_file - kube config imported from EKS stored as a secret file
+- aws-credentials - AWS credentials for the user that will make deployments to the EKS cluster
+
+![Screenshot Kubernetes](./_img/jenkins-credentials.png)
+
+When EKS cluster is created, the current user automatically get permissions to manage it. To grant other users the deployment permissions you need to add user mappings as described [here](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html). Run
+
+```bash
+kubectl edit configmap aws-auth -n kube-system
+```
+
+and add the following block:
+```yaml
+mapUsers: |
+- userarn: arn:aws:iam::579060413136:user/jenkins
+    username: jenkins
+    groups:
+    - system:masters
+```        
+
+where "jenkins" is the user name that will make the deployments (Jenkins server runs as this Linux account by default). 579060413136 is my AWS-id, you can find it in the output of CloudFormation export for the EKS IAM Role on the screenshot in the section "Install Jenkins".
+
+### Deployment steps in the Jenkinsfile
+
+#### Build Docker image
+This step stamps the current build number in HTML page with the SED command and then calls Docker Pipeline to build and tag a new Docker image:
+```jenkins
+script { 
+    sh 'sed -i "s/BUILDNUMBER/$BUILD_NUMBER/g" webapp/index.html'
+    dockerImage = docker.build(registry + ":$BUILD_NUMBER", "./webapp") 
+}
+```
+
+#### Deploy image to DockerHub
+
+This step also uses Docker Pipeline plugin to login on DockerHub and push image with specific version number and then the same image tagges as "latest".
+```jenkins
+script { 
+    docker.withRegistry( '', registryCredentials) { 
+        dockerImage.push() 
+        dockerImage.push('latest') 
+    }
+} 
+```
+
+#### Deploy web-app to Kubernetes
+
+The final step should aslo be simple if you can use Jenkins Kubernetes Continuous Deploy plugin. Unfortunately the lastest version of Jenkins has some broken dependencies that are [not resolved yet](https://github.com/jenkinsci/kubernetes-cd-plugin/issues/122). My goal was to automate the build pipeline as much as possible and I did not want to manually downgrade some Jenkins plugins to specific versions, so I decided to use AWS plugin to log in on EKS and then thrigger new deployment with kubectl:
+
+```jenkins
+script {
+    withAWS(credentials: 'aws-credentials', region: 'us-west-2') {
+        sh 'sed -i "s/latest/$BUILD_NUMBER/g" kubernetes-deployment/deployment.yaml'
+        withKubeConfig([credentialsId: 'eks_file', contextName: 'arn:aws:eks:us-west-2:579060413136:cluster/udacity-devops-eks']) {
+            sh 'kubectl apply -f kubernetes-deployment/deployment.yaml'
+        }
+    }
+}
+```
+
+This code also uses SED to put on the fly the current build number in the deployment manifest, because it generally not recommended to reference your container version as "latest".
