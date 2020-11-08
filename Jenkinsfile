@@ -37,6 +37,7 @@ pipeline {
             steps {
                 script {
                     withAWS(credentials: 'aws-credentials', region: 'us-west-2') {
+                        sh 'aws sts get-caller-identity'
                         withKubeConfig([credentialsId: 'eks_file', contextName: 'arn:aws:eks:us-west-2:579060413136:cluster/udacity-devops-eks']) {
                            sh 'kubectl apply -f kubernetes-deployment/deployment.yaml --kubeconfig $KUBECONFIG'
                         }
