@@ -303,3 +303,7 @@ Running command "kubectl get pods" right after after the push you can catch the 
 The headers of the HTML page tell browser not to cache the content and refresh page every 10 seconds. Shortly after the build, the page should automatically display the new version with the latest build number:
 
 ![Screenshot Build Version](./_img/buildversion.png)
+
+The developer can control the status of the build process on the Jenkins pipeline screen:
+
+![Screenshot Build Version](./_img/pipeline.png)
